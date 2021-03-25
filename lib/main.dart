@@ -1,6 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:pedometer/pedometer.dart';
+import 'models/data.dart';
+import 'package:http/http.dart' as http;
 
 String formatDate(DateTime d) {
   return d.toString().substring(0, 19);
@@ -45,6 +49,25 @@ class _HomePageState extends State<HomePage> {
   Stream<StepCount> _stepCountStream;
   Stream<PedestrianStatus> _pedestrianStatusStream;
   String _status = '?', _steps = '?';
+  final Uri _url =
+      Uri.parse('https://apiproductorcesar.azurewebsites.net/api/Data');
+
+  Future<String> _sendData(String evento) async {
+    Data data = Data(
+      eventDate: DateTime.now(),
+      eventDescription: evento,
+      nameDevice: "Xiaomi Mi 9 - Odometro",
+    );
+    var response = await http.post(
+      _url,
+      headers: {
+        HttpHeaders.contentTypeHeader: "application/json",
+      },
+      body: dataToJson(data),
+    );
+    print("${response.statusCode}: ${response.body}");
+    return response.body;
+  }
 
   @override
   void initState() {
@@ -54,6 +77,7 @@ class _HomePageState extends State<HomePage> {
 
   void onStepCount(StepCount event) {
     print(event);
+    _sendData(event.toString());
     setState(() {
       _steps = event.steps.toString();
     });
@@ -61,6 +85,7 @@ class _HomePageState extends State<HomePage> {
 
   void onPedestrianStatusChanged(PedestrianStatus event) {
     print(event);
+    _sendData(event.toString());
     setState(() {
       _status = event.status;
     });
